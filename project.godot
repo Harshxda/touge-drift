@@ -1,0 +1,21 @@
+config_version=5
+[application]
+config/name="Touge Drift"
+config/icon="res://assets/icon.svg"
+run/max_fps=60
+run/main_scene="res://scenes/world.tscn"
+config/features=PackedStringArray("4.5", "Mobile")
+[display]
+window/size/viewport_width=1440
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/handheld/orientation=0
+[rendering]
+textures/vram_compression/import_etc2_astc=true
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+textures/default_filters/use_nearest_mipmap_filter=false
+scaling_3d/scale=0.75
+anti_aliasing/quality/msaa_3d=1
+[physics]
+common/physics_ticks_per_second=60
