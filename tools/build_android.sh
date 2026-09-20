@@ -5,5 +5,5 @@ cd "$(dirname "$0")/.."
 export GODOT
 ./tools/test.sh
 mkdir -p builds
-"$GODOT" --headless --path . --export-debug Android builds/touge-drift-v0.1-prototype.apk
-python3 tools/verify_apk.py builds/touge-drift-v0.1-prototype.apk
+"$GODOT" --headless --path . --export-debug Android builds/touge-drift-v0.2-practice.apk
+python3 tools/verify_apk.py builds/touge-drift-v0.2-practice.apk

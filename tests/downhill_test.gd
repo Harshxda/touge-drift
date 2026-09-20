@@ -5,6 +5,8 @@ func run() -> void:
 	Engine.max_fps = 0
 	var world: Node3D = load("res://scenes/world.tscn").instantiate()
 	root.add_child(world)
+	world.practice_mode = false
+	world.restart()
 	world.hud.set_process(false)
 	var car: DriftCar = world.car
 	var max_slip := 0.0

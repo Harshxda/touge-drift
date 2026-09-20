@@ -17,6 +17,8 @@ var combo := 1.0
 var drift_time := 0.0
 var grace := 0.0
 var yaw_speed := 0.0
+var drift_hold := 0.0
+var was_handbrake := false
 var wheels: Array[Node3D] = []
 var brake_material: StandardMaterial3D
 var smoke: GPUParticles3D
@@ -29,7 +31,7 @@ func _ready() -> void:
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.75, 0.8, 4.1)
 	shape.shape = box
-	shape.position.y = 0.65
+	shape.position.y = 0.43
 	add_child(shape)
 	_make_visuals()
 
@@ -42,11 +44,17 @@ func _physics_process(dt: float) -> void:
 	var lateral := velocity.dot(right)
 	slip = atan2(lateral, maxf(absf(longitudinal), 0.5))
 	steering = move_toward(steering, steer, assist.steering_speed * dt)
-	if speed > 8.0 and (handbrake or (brake > 0.1 and absf(steering) > 0.45)):
+	drift_hold = maxf(0.0, drift_hold - dt)
+	var power_slide := throttle > 0.75 and absf(steering) > 0.65 and speed > 5.5
+	if speed > 4.5 and (handbrake or power_slide or (brake > 0.1 and absf(steering) > 0.35)):
 		drifting = true
-	if speed < 5.0 or (absf(slip) < 0.12 and absf(steering) < 0.15 and not handbrake):
+		drift_hold = 1.1
+		if handbrake and not was_handbrake and absf(steer) > 0.1:
+			yaw_speed -= steer * 0.8
+	was_handbrake = handbrake
+	if speed < 4.0 or (drift_hold <= 0 and absf(slip) < 0.10 and absf(steering) < 0.15 and not handbrake):
 		drifting = false
-	var target_yaw := -steering * clampf(longitudinal / 12.0, -0.65, 1.0) * (1.15 if drifting else 0.83)
+	var target_yaw := -steering * clampf(longitudinal / 12.0, -0.65, 1.0) * (1.45 if drifting else 0.90)
 	target_yaw += assist.yaw_correction(slip, drifting)
 	yaw_speed = lerpf(yaw_speed, target_yaw, 1.0 - exp(-assist.stability * dt))
 	rotate_y(yaw_speed * dt)
@@ -56,7 +64,7 @@ func _physics_process(dt: float) -> void:
 	if longitudinal < -6.0:
 		acceleration = maxf(acceleration, 0.0)
 	velocity += forward * acceleration * dt
-	velocity -= right * lateral * minf(assist.lateral_grip(drifting, handbrake) * dt, 1.0)
+	velocity -= right * lateral * minf(assist.lateral_grip(drifting, handbrake, throttle) * dt, 1.0)
 	velocity -= Vector3(velocity.x, 0, velocity.z) * (0.10 + (0.55 if handbrake else 0.0)) * dt
 	velocity.y -= 24.0 * dt
 	move_and_slide()
@@ -91,52 +99,22 @@ func reset_at(point: Vector3, heading: float) -> void:
 	rotation = Vector3(0, heading, 0)
 	velocity = Vector3.ZERO
 	yaw_speed = 0
+	drift_hold = 0
+	was_handbrake = false
+	steering = 0
 	drifting = false
 	score = 0
 	combo = 1
 	drift_time = 0
+	grace = 0
+	slip = 0
+	speed = 0
+	crashed = false
 
 func _make_visuals() -> void:
-	var paint := StandardMaterial3D.new()
-	paint.albedo_color = Color("c6d7cf")
-	paint.metallic = 0.65
-	paint.roughness = 0.28
-	var glass := StandardMaterial3D.new()
-	glass.albedo_color = Color("101e2a")
-	glass.metallic = 0.5
-	_mesh_box(Vector3(1.86, 0.52, 4.35), Vector3(0, 0.64, 0), paint)
-	_mesh_box(Vector3(1.55, 0.56, 1.85), Vector3(0, 1.12, 0.1), glass)
-	_mesh_box(Vector3(1.6, 0.09, 1.4), Vector3(0, 1.43, 0.18), paint)
-	_mesh_box(Vector3(1.95, 0.10, 0.42), Vector3(0, 1.12, 1.85), paint)
-	var trim := StandardMaterial3D.new()
-	trim.albedo_color = Color("87949c")
-	trim.metallic = 0.8
-	_mesh_box(Vector3(0.16, 0.16, 0.30), Vector3(-0.6, 0.4, 2.24), trim)
-	var rubber := StandardMaterial3D.new()
-	rubber.albedo_color = Color("101217")
-	for x in [-0.94, 0.94]:
-		for z in [-1.35, 1.35]:
-			var wheel := MeshInstance3D.new()
-			var cylinder := CylinderMesh.new()
-			cylinder.top_radius = 0.35
-			cylinder.bottom_radius = 0.35
-			cylinder.height = 0.24
-			cylinder.radial_segments = 12
-			wheel.mesh = cylinder
-			wheel.material_override = rubber
-			wheel.rotation.z = PI / 2
-			wheel.position = Vector3(x, 0.36, z)
-			add_child(wheel)
-			wheels.append(wheel)
-			var rim := MeshInstance3D.new()
-			var disc := CylinderMesh.new()
-			disc.top_radius = 0.24
-			disc.bottom_radius = 0.24
-			disc.height = 0.255
-			disc.radial_segments = 8
-			rim.mesh = disc
-			rim.material_override = trim
-			wheel.add_child(rim)
+	var model := CoupeVisual.new()
+	add_child(model)
+	wheels = model.wheels
 	brake_material = StandardMaterial3D.new()
 	brake_material.albedo_color = Color("ff352c")
 	brake_material.emission_enabled = true
@@ -146,8 +124,8 @@ func _make_visuals() -> void:
 	lamp.emission = Color("dcefff")
 	lamp.emission_energy_multiplier = 3
 	for x in [-0.62, 0.62]:
-		_mesh_box(Vector3(0.52, 0.16, 0.08), Vector3(x, 0.74, 2.19), brake_material)
-		_mesh_box(Vector3(0.52, 0.15, 0.08), Vector3(x, 0.74, -2.19), lamp)
+		_mesh_box(Vector3(0.52, 0.16, 0.08), Vector3(x, 0.61, 2.215), brake_material)
+		_mesh_box(Vector3(0.52, 0.15, 0.08), Vector3(x, 0.61, -2.255), lamp)
 		var light := SpotLight3D.new()
 		light.position = Vector3(x, 0.86, -2.2)
 		light.rotation.x = -0.08

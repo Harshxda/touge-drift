@@ -1,58 +1,70 @@
-# Touge Drift
+# Touge Drift — v0.2 Practice
 
-An original Android-first assisted drifting prototype. Godot **4.5.1**, GDScript,
-Mobile renderer. Landscape, ARM64, Android 7+ (API 24), target API 35.
+Android-first assisted drifting in Godot **4.5.1**, Mobile renderer.
+Landscape, ARM64, Android 7+ (API 24), target API 35.
 
-**Status: v0.1 prototype candidate. Android playability and Pad 7 60 FPS are not
-verified.** This is a procedural greybox with a first night presentation pass,
-not the finished visual target or the full open-world roadmap.
+**Prototype build. Physical Android/controller playability and Pad 7 60 FPS
+remain unverified.**
 
-![Host Mobile-renderer capture](docs/preview.png)
+![Practice area, captured using the host Mobile renderer](docs/preview.png)
 
-## Run
-Open `project.godot` in Godot 4.5.1 and press F6 on `scenes/world.tscn`, or F5.
-The game launches directly into Kasumi Pass, a 1.65 km descent with six hairpins,
-a covered tunnel gallery and a small sakura cluster. The car is a fictional
-R14 coupe built from original procedural geometry.
+## What changed
+- A flat **112 × 128 m practice parking area**, painted doughnut circles,
+  parking bays, perimeter barriers, quick reset and an exit to the downhill.
+- Lower rear grip, throttle-dependent slide grip and easier initiation,
+  including power slides with strong steering and throttle.
+- Xbox / DualSense analog steering and triggers, handbrake, reset and mode switch.
+- A more detailed original coupe, repaired body-panel mesh merging and wheel
+  height, a higher chase camera, and a yellow/lavender/mint color pass inspired
+  by Diamond Is Unbreakable over the art of rally visual direction.
+- Original synthesized engine/tire feedback and a fixed-budget skid trail.
+  Audio is an initial procedural pass, not a finished soundtrack.
 
-Touch: left/right, GAS, BRAKE (reverse after stopping), E-BRAKE. Several fingers
-can be held together. Desktop: WASD/arrows, Space handbrake, R restart.
-Reset starts a new run; falling respawns at the last road checkpoint. Quality
-switches between 75% / 48 smoke particles and 60% / 24 particles.
+The original 1.65 km descent, six hairpins, tunnel, checkpoints, drift scoring
+and quality presets remain available. Visual/game-feel references describe the
+intended direction; this prototype is not yet equivalent to those references.
 
-Brake or tap the handbrake while steering above 29 km/h, then release and use
-throttle plus steering to sustain the slide. Drift scoring needs >25 km/h,
-12–70° angle and ground contact. Longer drifts increase combo; transitions have
-1.4 seconds grace. Recovery banks the combo, wall contact loses it.
+## Play
+Open `project.godot` in Godot 4.5.1 and press F5, or install
+`builds/touge-drift-v0.2-practice.apk` on a compatible Android device.
+The game starts in the parking area. Drive through the marked exit or select
+**GO DOWNHILL**. **PRACTICE LOT** returns to the parking area; **RESET** restarts
+in the current mode.
 
-## Source
-- `scripts/car.gd`: custom CharacterBody3D controller, automatic gear display,
-  original coupe, headlights/brake lights and smoke.
-- `scripts/drift_assist.gd`: separately tunable assistance Resource.
-- `scripts/chase_camera.gd`: velocity/body blended follow and obstacle ray.
-- `scripts/hud.gd`: independently tracked multitouch and keyboard fallback.
-- `scripts/track.gd`: deterministic road, collision, terrain and batched scenery.
-- `scripts/world.gd`: lighting, run progress, checkpoints and quality switch.
-- [Game plan](docs/GAME_PLAN.md), [development notes](docs/DEVELOPMENT.md),
-  [verification](docs/VERIFICATION.md).
+| Action | Touch | Keyboard | Xbox | DualSense |
+| --- | --- | --- | --- | --- |
+| Steering | Left/right | A/D or arrows | Left stick | Left stick |
+| Gas | GAS | W / Up | RT | R2 |
+| Brake/reverse | BRAKE | S / Down | LT | L2 |
+| Handbrake | HANDBRAKE | Space | A | Cross |
+| Reset | RESET | R | Y | Triangle |
+| Practice/downhill | Mode button | P | X | Square |
 
-## Test and export
-Set `GODOT` to your Godot 4.5.1 executable, then run `tools/test.sh`.
-`tools/build_android.sh` exports the debug APK after tests. Configure Java 17,
-SDK paths and a local debug keystore in Godot Editor Settings first. Install
-matching templates and Android SDK platform-tools, build-tools 35.0.0, platform
-35. The project enables Android texture import. See the
-[official Godot Android setup](https://docs.godotengine.org/en/4.5/tutorials/export/exporting_for_android.html).
+Controller steering has a rescaled 15% deadzone. Pair/connect the controller
+through the operating system. Actual Bluetooth/USB mappings on Pad 7 still
+need testing. Touch remains available while a controller is connected.
 
-`tools/verify_apk.py builds/touge-drift-v0.1-prototype.apk` checks archive,
-resources and ABI. Also run Android `apksigner verify --verbose` and
-`aapt2 dump xmltree <apk> --file AndroidManifest.xml`; archive checks alone do
-not validate signing or runtime behavior.
+For a doughnut, build some speed, steer and briefly hold the handbrake, then
+release it and balance throttle/steering. Partial trigger pressure gives finer
+control. Strong steering and throttle can also break traction above 20 km/h.
+Scoreable drifts need >25 km/h and a 12–70° slip angle. Practice has no finish
+trigger or time limit. Quality switches between 75%/48 smoke particles and
+60%/24 particles; skid geometry is capped at 768 segments.
 
-`adb install -r builds/touge-drift-v0.1-prototype.apk`
+## Build and verify
+Set `GODOT` to Godot 4.5.1 and run `tools/test.sh` for import, physics, complete
+route, controller, practice and car-mesh regression checks. Run
+`tools/build_android.sh` to test, export and check the APK archive/resources.
+Configure Java 17, matching export templates, SDK platform 35 and build-tools
+35.0.0 in Godot Editor Settings first. Keep the debug keystore outside Git.
 
-`adb shell am start -n com.harshxda.tougedrift/com.godot.game.GodotApp`
+Also verify the APK with `apksigner verify --verbose`, `zipalign -c -P 16 4`,
+and `aapt2 dump xmltree <apk> --file AndroidManifest.xml`.
 
-Debug key stays outside the repository. Builds and Godot cache are ignored.
-No third-party game assets are used. No city, economy, traffic, police or rivals
-are implemented before the handling acceptance gate.
+Install: `adb install -r builds/touge-drift-v0.2-practice.apk`
+
+Launch: `adb shell am start -n com.harshxda.tougedrift/com.godot.game.GodotApp`
+
+See [verification](docs/VERIFICATION.md), [development notes](docs/DEVELOPMENT.md)
+and [project direction](docs/GAME_PLAN.md). Builds/cache are ignored by Git.
+No city, economy, traffic, police or rivals are implemented.

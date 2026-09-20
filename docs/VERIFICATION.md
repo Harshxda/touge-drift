@@ -1,49 +1,49 @@
-# Verification — v0.1 prototype candidate
+# Verification — v0.2 Practice
 
-Date: 2026-09-18. Godot 4.5.1 stable official. This document records evidence,
-not a Playable certification. APK is a debug-signed ARM64 sideload build.
+Date: 2026-09-20. Godot 4.5.1 official. Android debug-signed ARM64 sideload build.
+This is a prototype, not hardware acceptance certification.
 
 ## Automated host checks
-- Script import and headless physics: pass.
-- Ground contact, acceleration >72 km/h, braking: pass.
-- Handbrake initiation, scoreable assisted angle, scoring, recovery, score
-  banking, reverse: pass. Test slide around 15° under its scripted inputs.
-- Independent synthetic steering/throttle touches, independent release and
-  focus-loss cleanup: pass. This does not test a real Android touch driver.
-- Full 1,652.39 m route driven through actual physics to finish: pass in 6,581
-  physics frames; 13 barrier-contact frames; peak slip about 30.25°.
-- Mobile Vulkan renderer launches on host llvmpipe software rendering: pass.
-  Actual screenshot inspected for road, car, HUD, lamps and headlight pools.
-  This is not an Android GPU result or a valid 60 FPS benchmark.
+- Godot script/resource import; acceleration, braking, handbrake initiation,
+  sustained scoreable slide, recovery, banking and reverse.
+- Simultaneous synthetic touch inputs and focus cleanup.
+- Controller deadzone, proportional steering/triggers, simultaneous handbrake,
+  independent release, reset, X/Square mode switch, disconnect and focus cleanup.
+- Practice ground contact, 2.62 full doughnuts per direction over 20 seconds,
+  1,193 drifting frames out of 1,200 per direction, zero barrier-contact frames.
+- Practice does not advance/finish the downhill; reset, mode switching and
+  physically driving through the exit work.
+- Full 1,652.39 m descent through physics: 6,556 frames, 26 barrier-contact frames,
+  peak slip 38.81°. This checks navigability, not clean human racing lines.
+- All car body vertices remain referenced after merging with indexed box parts.
+- Skid geometry capped at 768 segments; audio loop length uses samples,
+  independent of compressed asset byte length.
 
-## APK checks
-- File exists and is nonzero; ZIP CRC integrity: pass.
-- Expected compiled world scene, all six gameplay scripts and project settings:
-  packaged; test scripts excluded.
-- Native libraries: arm64-v8a `libgodot_android.so` and `libc++_shared.so`.
-- Package `com.harshxda.tougedrift`; version `0.1.0-prototype`; version code 1.
-- Minimum SDK 24; target SDK 35; landscape activity and launcher intent.
-- APK signature v2/v3: verified with Android apksigner, Android Debug certificate.
-- See `BUILD_VERIFICATION.txt` for final hash, byte count and tool output.
+## Presentation check
+Host Mobile Vulkan renderer on llvmpipe software rendering. Inspected actual
+parking/car/palette/HUD, drifting/skid and downhill captures. This is not a
+hardware GPU performance result. Audio assets are original deterministic
+synthesis (`tools/generate_audio.py`); physical-device listening is pending.
 
-The legacy `aapt dump badging` command reports a typed-attribute parsing error
-on the Godot template. Manifest inspection uses `aapt2 dump xmltree` instead.
-The non-Gradle Godot template retains an unused themed-icon resource-table
-reference after replacing the active icon XML. aapt2 still warns about this
-missing themed_icon.xml, despite the supplied original monochrome icon. APK
-signature and alignment checks pass; actual launcher behavior remains untested.
+## Package checks
+Use `BUILD_VERIFICATION-v0.2.txt` for final hash, size, signature, alignment and
+manifest evidence. Expected package: `com.harshxda.tougedrift`, version code 2,
+version `0.2.0-practice`, minimum SDK 24, target SDK 35, landscape, ARM64 only.
+Archive checks require the coupe/feedback scripts and both imported audio
+resources, and exclude tests. The previous APK remains available separately.
 
-## Not tested / release blockers
-ADB lists no attached devices. No Android emulator was run; this host exposes
-no /dev/kvm. APK installation, Android launch, hardware touch, real sustained
-drift feel/transitions, usable camera throughout a human run, Android headlight
-rendering, Android crash behavior and Pad 7 stable 60 FPS remain **untested**.
+## Still unverified
+ADB reports no attached device. Android installation/launch, real multitouch,
+Xbox and DualSense mappings over Bluetooth/USB, disconnect/reconnect on hardware,
+background/resume behavior, human drift feel and camera comfort, audio balance,
+crash behavior and sustained Pad 7 60 FPS require device testing.
 
-On the tablet, complete all ten game-plan acceptance steps. Test left+gas,
-right+gas, brake+steer, gas+handbrake+steer, lifting one finger, dragging off a
-button, app background/resume, both quality presets, a full downhill and retry.
-Capture `adb logcat` for script/Vulkan/crash errors. Profile at least 10 minutes
-with smoke and tunnel lighting, including the last five minutes after warm-up.
-Record actual render scale, refresh rate and frame-time distribution.
+On Pad 7: try left/right doughnuts, throttle-controlled radius changes,
+figure-eights, recovery, reset, mode switch, drive-through exit and a full run.
+Test both controllers and touch; test background/resume and disconnect while
+holding throttle. Profile both quality presets for at least 10 minutes and
+inspect logcat. Do not call this hardware-verified or 60 FPS confirmed yet.
 
-**Do not label this build “Touge Drift v0.1 — Playable” until those tests pass.**
+The Godot template's pre-existing unused themed-icon resource reference may
+still produce an aapt2 warning. Signing and alignment verification are separate;
+actual Android launcher appearance remains untested.

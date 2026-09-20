@@ -13,9 +13,13 @@ with zipfile.ZipFile(apk) as archive:
                      'assets/scripts/car.gdc', 'assets/scripts/drift_assist.gdc',
                      'assets/scripts/chase_camera.gdc', 'assets/scripts/hud.gdc',
                      'assets/scripts/track.gdc', 'assets/scripts/world.gdc',
+                     'assets/scripts/coupe_visual.gdc', 'assets/scripts/driving_feedback.gdc',
+                     'assets/assets/audio/engine.wav.import', 'assets/assets/audio/tires.wav.import',
                      'assets/scenes/world.tscn.remap', 'lib/arm64-v8a/libgodot_android.so']:
         assert required in names, f'Missing {required}'
     assert any(n.endswith('world.scn') for n in names), 'Missing compiled world scene'
+    for sound in ('engine', 'tires'):
+        assert any(n.startswith(f'assets/.godot/imported/{sound}.wav-') and n.endswith('.sample') for n in names), f'Missing imported {sound} audio'
     assert not any(n.startswith('assets/tests/') for n in names), 'Tests accidentally packaged'
     abis = sorted({n.split('/')[1] for n in names if n.startswith('lib/')})
     assert abis == ['arm64-v8a'], f'Unexpected ABIs: {abis}'

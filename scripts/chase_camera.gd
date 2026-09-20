@@ -5,7 +5,7 @@ var follow_direction := Vector3.FORWARD
 
 func snap() -> void:
 	follow_direction = -car.global_basis.z
-	global_position = car.global_position - follow_direction * 10 + Vector3.UP * 5.2
+	global_position = car.global_position - follow_direction * 13 + Vector3.UP * 8.2
 	look_at(car.global_position + follow_direction * 6 + Vector3.UP)
 
 func _physics_process(dt: float) -> void:
@@ -15,7 +15,7 @@ func _physics_process(dt: float) -> void:
 		desired = desired.lerp(motion.normalized(), 0.65).normalized()
 	follow_direction = follow_direction.lerp(desired, 1 - exp(-3.5 * dt)).normalized()
 	var target := car.global_position + Vector3.UP * 1.2
-	var desired_position := target - follow_direction * (9.5 + car.speed * 0.055) + Vector3.UP * 4.2
+	var desired_position := target - follow_direction * (12.5 + car.speed * 0.055) + Vector3.UP * 7.0
 	var query := PhysicsRayQueryParameters3D.create(target, desired_position)
 	query.exclude = [car.get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
@@ -23,4 +23,4 @@ func _physics_process(dt: float) -> void:
 		desired_position = hit.position + hit.normal * 0.4
 	global_position = global_position.lerp(desired_position, 1 - exp(-7 * dt))
 	look_at(target + follow_direction * 5)
-	fov = lerpf(fov, 66 + car.speed * 0.32, 1 - exp(-2 * dt))
+	fov = lerpf(fov, 60 + car.speed * 0.20, 1 - exp(-2 * dt))
